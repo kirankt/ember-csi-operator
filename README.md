@@ -30,20 +30,54 @@ $ make deploy
 The Custom Resource File is a yaml file that configures the Ember CSI driver. Details such as unique name, driver backend-specific information and files are specified here. 
 ### Example CR file.
 ```
+# API Version of Ember. Do not change
 apiVersion: "ember-csi.io/v1alpha1"
+# Object Kind. Do not change
 kind: "EmberCSI"
 metadata:
+# Required. Unique name for this instance of EmberCSI.
   name: "external-ceph"
 spec:
-# Optional. Use nodeSelector for placing CSI controller pod
-# nodeSelector:
-#   # Any arbitrary key: value pair that must match nodeLabels set by the admin
-#   # kubectl get nodes --show-labels
-#   ember-csi-controller: true
+Optional. Use nodeSelector for placing CSI controller pod
+ nodeSelector:
+   # Any arbitrary key: value pair that must match nodeLabels set by the admin
+   # kubectl get nodes --show-labels
+   ember-csi-controller: true
+ # Optional. CSI Topology. Array of 'topology', 'node' pairs.
+ topologies:
+    - topology:
+        # Required, if parent: 'topologies' is present.
+        # Map of key: "value" pairs. Value should be quoted.
+        lab: "madrid"
+        transport: "iscsi"
+      nodes:
+        # Required, if parent: 'topologies' is present.
+        # Array of NodeSelectorRequirement for the above topology.
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+            - node2.example.com
+
+  # Config section to pass to Ember-CSI driver
   config:
     envVars:
-      X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
-      X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
+        # Required. Passed to the driver to configure the backend. JSON string.
+        X_CSI_BACKEND_CONFIG:      
+        # Optional. Passed to the driver to configure the driver. JSON string.
+        X_CSI_EMBER_CONFIG       
+        # Optional. Passed to the driver to configure the presistent storage. JSON string.
+        X_CSI_PERSISTENCE_CONFIG 
+        # Optional. Passed to the driver to configure debugging. JSON string.
+        X_CSI_DEBUG_MODE         
+	# Optional. If we want to abort or queue (default) duplicated requests.
+        X_CSI_ABORT_DUPLICATES   
+	# Optional. Default mount filesystem when missing in publish calls
+        X_CSI_DEFAULT_MOUNT_FS  
+	# Optional. ID used by this node to identify itself to the controller
+        X_CSI_NODE_ID 
+	# Optional. IP address in the Node used to connect to the storage
+        X_CSI_STORAGE_NW_IP 
+    # tar file used by the driver to configure any required backend configuration files
     sysFiles:
       name: sysfiles-secret
       key: "system-files.tar"
