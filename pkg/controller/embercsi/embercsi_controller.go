@@ -101,6 +101,15 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 
 // Manage the Objects created by the Operator.
 func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.EmberCSI) error {
+	glog.V(3).Infof("Validating EmberCSI Deployment")
+	validationErrs := r.validateCSIDriverDeployment(newInstance)
+	if len(validationErrs) > 0 {
+		for _, err := range validationErrs {
+			r.recorder.Event(instance, corev1.EventTypeWarning, "ValidationError", e.Error())
+		}
+		return nil
+	}
+
 	glog.V(3).Infof("Reconciling EmberCSI Deployment Objects")
 	// Check if the statefuleSet already exists, if not create a new one
 	ss := &appsv1.StatefulSet{}
