@@ -102,6 +102,13 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 // Manage the Objects created by the Operator.
 func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.EmberCSI) error {
 	glog.V(3).Infof("Reconciling EmberCSI Deployment Objects")
+
+	// Keep tab of deployment of objects
+	ssDeploymentStatus := false
+	dsDeploymentStatus := false
+	scDeploymentStatus := false
+	vscDeploymentStatus := false
+
 	// Check if the statefuleSet already exists, if not create a new one
 	ss := &appsv1.StatefulSet{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-controller", instance.Name), Namespace: instance.Namespace}, ss)
@@ -114,6 +121,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 			glog.Errorf("Failed to create a new StatefulSet %s in %s: %s", ss.Name, ss.Namespace, err)
 			return err
 		}
+		ssDeploymentStatus = true
 		glog.V(3).Infof("Successfully Created a new StatefulSet %s in %s", ss.Name, ss.Namespace)
 	} else if err != nil {
 		glog.Error("Failed to get StatefulSet", err)
@@ -150,6 +158,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 			}
 			glog.V(3).Infof("Successfully Created a new Daemonset %s in %s", ds.Name, ds.Namespace)
 		}
+			dsDeploymentStatus = true
 	} else if err != nil {
 		glog.Error("failed to get DaemonSet", err)
 		return err
@@ -167,6 +176,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 			glog.Errorf("Failed to create a new StorageClass %s in %s: %s", sc.Name, sc.Namespace, err)
 			return err
 		}
+		scDeploymentStatus = true
 		glog.V(3).Infof("Successfully Created a new StorageClass %s in %s", sc.Name, sc.Namespace)
 	} else if err != nil {
 		glog.Error("failed to get StorageClass", err)
@@ -188,10 +198,16 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 				return err
 			}
 			glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
+			vscDeploymentStatus = true
 		} else if err != nil {
 			glog.Error("failed to get VolumeSnapshotClass", err)
 			return err
 		}
+	}
+
+	// If we were able to successfully send of object creation, we can signal 'done' on the channel
+	if ssDeploymentStatus && dsDeploymentStatus && scDeploymentStatus && vscDeploymentStatus {
+		isDone<-true
 	}
 
 	return nil

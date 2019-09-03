@@ -17,7 +17,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	//"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
 func printVersion() {
@@ -82,7 +82,7 @@ func main() {
 	glog.Info("Starting the Cmd.")
 
 	// Start the Cmd
-	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(embercsi.SetupSignalHandler()); err != nil {
 		glog.Fatal("Error starting Cmd: ", err)
 	}
 }
