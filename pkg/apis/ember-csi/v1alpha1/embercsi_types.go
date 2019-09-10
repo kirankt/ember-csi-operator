@@ -8,10 +8,11 @@ import (
 // EmberCSISpec defines the desired state of EmberCSI
 type EmberCSISpec struct {
 	Config       EmberCSIConfig    `json:"config"`
-	Image        string            `json:"image",omitempty`
 	NodeSelector map[string]string `json:"nodeSelector",omitempty`
 	Tolerations  []v1.Toleration   `json:"tolerations",omitempty`
 	Topologies   []Topologies      `json:"topologies",omitempty`
+	Version	     string	       `json:"version",omitempty`
+        Images	     EmberCSIImages    `json:"images",omitempty`
 }
 
 type Topologies struct {
@@ -42,6 +43,17 @@ type EmberCSI struct {
 type EmberCSIConfig struct {
 	EnvVars  EnvVars `json:"envVars"`
 	SysFiles Secrets `json:"sysFiles"`
+}
+
+# Pod Images for Updates
+type EmberCSIImages struct {
+	EmberCSIDriver		string	   `json:"ember-csi-driver",omitempty`
+	ExternalAttacher	string	   `json:"external-attacher",omitempty`
+	ExternalProvisioner	string	   `json:"external-provisioner",omitempty`
+	ClusterRegistrar	string	   `json:"cluster-registrar",omitempty`
+	NodeRegistrar		string	   `json:"node-registrar",omitempty`
+	DriverRegistrar		string	   `json:"driver-registrar",omitempty`
+	ExternalSnapshotter	string	   `json:"external-snapshotter",omitempty`
 }
 
 type EnvVars struct {
