@@ -251,6 +251,7 @@ func (r *ReconcileEmberCSI) syncStorageClass(instance *embercsiv1alpha1.EmberCSI
 		return err
 	}
 
+<<<<<<< HEAD
 	return nil
 }
 
@@ -280,6 +281,18 @@ func (r *ReconcileEmberCSI) syncVolumeSnapshotClass(instance *embercsiv1alpha1.E
 				}
 				glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", actual.Name, actual.Namespace)
 				return nil
+=======
+	// Remove the VolumeSnapshotClass and Update the controller and nodes 
+	if !snapShotEnabled {
+		glog.V(3).Info("Info: Request to disable VolumeSnapshotClass")
+		vsc := &snapv1a1.VolumeSnapshotClass{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), Namespace: vsc.Namespace}, vsc)
+		if err != nil && !errors.IsNotFound(err) {
+			err = r.client.Delete(context.TODO(), vsc)
+			if err != nil {
+				glog.Errorf("Failed to remove VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace, err)
+				return err
+>>>>>>> upstream/master
 			}
 			return err
 		}
